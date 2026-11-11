@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>看護教育ハブ | 浦安中央病院</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Hiragino Sans','Meiryo',sans-serif;background:#f0f4ff;color:#1e293b;min-height:100vh;}
+
+/* ===== ヘッダー ===== */
+header{background:#1d4ed8;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(29,78,216,.3);}
+header h1{font-size:16px;font-weight:600;}
+.header-right{display:flex;align-items:center;gap:8px;}
+#user-badge{font-size:12px;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:20px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+#btn-logout{font-size:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 10px;border-radius:20px;cursor:pointer;}
+
+/* ===== 画面共通 ===== */
+.screen{display:none;padding:20px 16px;max-width:600px;margin:0 auto;}
+.screen.active{display:block;}
+
+/* ===== ログイン画面 ===== */
+#screen-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f0f4ff;}
+.login-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(29,78,216,.12);padding:36px 28px;width:100%;max-width:400px;}
+.login-logo{text-align:center;margin-bottom:6px;font-size:36px;}
+.login-hospital{text-align:center;font-size:12px;color:#94a3b8;margin-bottom:4px;}
+.login-title{text-align:center;font-size:20px;font-weight:700;color:#1d4ed8;margin-bottom:4px;}
+.login-sub{text-align:center;font-size:13px;color:#94a3b8;margin-bottom:28px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;}
+.form-group input,.form-group select{width:100%;padding:12px 14px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;background:#fff;}
+.form-group input:focus,.form-group select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.btn-primary{width:100%;padding:14px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-size:16px;font-family:inherit;font-weight:600;cursor:pointer;margin-top:8px;transition:background .15s;}
+.btn-primary:active{background:#1d4ed8;}
+.login-note{text-align:center;font-size:11px;color:#94a3b8;margin-top:16px;}
+
+/* ===== カタログ画面 ===== */
+.page-title{font-size:20px;font-weight:700;color:#1e293b;margin-bottom:4px;}
+.page-sub{font-size:13px;color:#94a3b8;margin-bottom:20px;}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-bar input{flex:1;min-width:0;padding:9px 12px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:14px;font-family:inherit;outline:none;}
+.filter-bar input:focus{border-color:#2563eb;}
+.filter-bar select{padding:9px 12px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;outline:none;}
+.cards{display:flex;flex-direction:column;gap:12px;}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.07);padding:16px;cursor:pointer;transition:box-shadow .2s;border:1.5px solid transparent;}
+.card:active,.card:hover{box-shadow:0 4px 16px rgba(29,78,216,.12);border-color:#bfdbfe;}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#eff6ff;color:#1d4ed8;font-weight:600;}
+.tag.group{background:#f0fdf4;color:#166534;}
+.card h3{font-size:15px;font-weight:600;margin-bottom:4px;}
+.card p{font-size:13px;color:#94a3b8;line-height:1.5;}
+.card-footer{margin-top:10px;display:flex;align-items:center;justify-content:space-between;}
+.status-pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
+.pill-未視聴{background:#fef3c7;color:#92400e;}
+.pill-視聴済み{background:#dbeafe;color:#1e40af;}
+.pill-完了{background:#d1fae5;color:#065f46;}
+.pill-再確認{background:#fee2e2;color:#991b1b;}
+.pill-テスト未{background:#fef3c7;color:#92400e;}
+.btn-open{font-size:13px;color:#2563eb;font-weight:600;background:none;border:none;cursor:pointer;padding:0;}
+.empty-msg{text-align:center;padding:40px 0;color:#94a3b8;font-size:14px;}
+
+/* ===== 教材詳細 ===== */
+.back-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#2563eb;font-weight:600;background:none;border:none;cursor:pointer;padding:0;margin-bottom:16px;}
+.module-title{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px;}
+.module-meta{font-size:13px;color:#94a3b8;margin-bottom:16px;}
+.section-card{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.07);padding:16px;margin-bottom:16px;}
+.section-card h4{font-size:14px;font-weight:700;color:#2563eb;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid #eff6ff;}
+video{width:100%;border-radius:8px;background:#000;}
+.no-video{text-align:center;padding:32px;background:#f8fafc;border-radius:8px;color:#94a3b8;font-size:14px;}
+.standard-text{font-size:13px;line-height:1.9;white-space:pre-wrap;color:#334155;}
+.btn-watch{width:100%;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;margin-top:10px;}
+.btn-watch:disabled{background:#cbd5e1;cursor:default;}
+.watch-done{text-align:center;padding:8px;color:#1d4ed8;font-weight:600;font-size:13px;}
+
+/* ===== クイズ ===== */
+.quiz-wrap{margin-top:4px;}
+.quiz-q{font-size:14px;font-weight:600;margin-bottom:12px;line-height:1.6;color:#1e293b;}
+.quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.quiz-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #bfdbfe;border-radius:8px;cursor:pointer;transition:background .15s;}
+.quiz-opt:hover{background:#eff6ff;}
+.quiz-opt.selected{border-color:#2563eb;background:#eff6ff;}
+.quiz-opt.correct{border-color:#059669;background:#d1fae5;}
+.quiz-opt.wrong{border-color:#dc2626;background:#fee2e2;}
+.quiz-opt input{accent-color:#2563eb;width:16px;height:16px;flex-shrink:0;}
+.quiz-nav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:4px;}
+.btn-secondary{padding:10px 20px;background:#fff;color:#2563eb;border:1.5px solid #2563eb;border-radius:8px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;}
+.btn-submit{padding:10px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;}
+.quiz-progress{font-size:12px;color:#94a3b8;}
+.quiz-locked{font-size:13px;color:#94a3b8;text-align:center;padding:16px 0;}
+
+/* ===== 結果 ===== */
+#screen-result{text-align:center;}
+.result-icon{font-size:64px;margin:20px 0 12px;}
+.result-score{font-size:48px;font-weight:700;color:#2563eb;margin-bottom:4px;}
+.result-label{font-size:14px;color:#94a3b8;margin-bottom:24px;}
+.result-detail{background:#fff;border-radius:12px;padding:16px;text-align:left;margin-bottom:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+.result-detail h4{font-size:14px;font-weight:700;color:#2563eb;margin-bottom:10px;}
+.result-item{font-size:13px;padding:6px 0;border-bottom:1px solid #f1f5f9;line-height:1.6;}
+.result-item:last-child{border-bottom:none;}
+.result-item.ok::before{content:'✅ ';}
+.result-item.ng::before{content:'❌ ';}
+.btn-retry{width:100%;padding:14px;background:#fff;color:#2563eb;border:1.5px solid #2563eb;border-radius:10px;font-size:15px;font-family:inherit;font-weight:600;cursor:pointer;margin-bottom:10px;}
+.btn-catalog{width:100%;padding:14px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-size:15px;font-family:inherit;font-weight:600;cursor:pointer;}
+
+/* ===== ローディング ===== */
+.loading{text-align:center;padding:60px 0;color:#94a3b8;font-size:14px;}
+.spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header id="app-header" style="display:none;">
+  <h1>🏥 看護教育ハブ</h1>
+  <div class="header-right">
+    <div id="user-badge">👤 <span id="badge-name"></span></div>
+    <button id="btn-logout" onclick="logout()">ログアウト</button>
+  </div>
+</header>
+
+<!-- ログイン -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-logo">🏥</div>
+    <div class="login-hospital">浦安中央病院</div>
+    <div class="login-title">看護教育ハブ</div>
+    <div class="login-sub">お名前と職種を入力してください</div>
+    <div class="form-group">
+      <label>お名前</label>
+      <input type="text" id="input-name" placeholder="山田 花子" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label>職種</label>
+      <select id="input-group">
+        <option value="">選択してください</option>
+        <option>新人看護師</option>
+        <option>既存看護師</option>
+        <option>看護助手</option>
+        <option>教育担当者</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">ログイン</button>
+    <div class="login-note">※ 次回から自動的にログインします</div>
+  </div>
+</div>
+
+<!-- 教材一覧 -->
+<div class="screen" id="screen-catalog">
+  <p class="page-title">動画教材</p>
+  <p class="page-sub">教材を選んで動画を視聴し、確認テストに回答してください。</p>
+  <div class="filter-bar">
+    <input type="search" id="search-input" placeholder="教材名・職種で検索" oninput="renderCatalog()">
+    <select id="cat-filter" onchange="renderCatalog()">
+      <option value="">すべての分類</option>
+    </select>
+  </div>
+  <div class="cards" id="card-list"><div class="loading"><div class="spinner"></div>教材を読み込み中…</div></div>
+</div>
+
+<!-- 教材詳細 -->
+<div class="screen" id="screen-module">
+  <button class="back-btn" onclick="showCatalog()">← 教材一覧に戻る</button>
+  <div id="module-content"></div>
+</div>
+
+<!-- 結果 -->
+<div class="screen" id="screen-result">
+  <div class="result-icon" id="result-icon"></div>
+  <div class="result-score" id="result-score"></div>
+  <div class="result-label" id="result-label"></div>
+  <div class="result-detail" id="result-detail"></div>
+  <button class="btn-retry" id="btn-retry" onclick="retryQuiz()">もう一度挑戦する</button>
+  <button class="btn-catalog" onclick="showCatalog()">教材一覧に戻る</button>
+</div>
+
+<script>
+// ===================================================
+// 設定 — Apps Script URL をここに貼り付けてください
+// ===================================================
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxw1AcRKLkf5t9tcimzeaIzNUYCvUhkZPc3-u84gSrk3X9Sy-vW789fI9ApOBIvzuyh/exec';
+
+// ===================================================
+// 状態
+// ===================================================
+var state = {
+  user: null,
+  modules: [],
+  progress: {},
+  currentModule: null,
+  quizAnswers: [],
+  quizIndex: 0
+};
+
+// ===================================================
+// クッキー操作
+// ===================================================
+function setCookie(name, value, days) {
+  var exp = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + exp + ';path=/';
+}
+function getCookie(name) {
+  var m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+// ===================================================
+// ログイン
+// ===================================================
+function doLogin() {
+  var name  = document.getElementById('input-name').value.trim();
+  var group = document.getElementById('input-group').value;
+  if (!name)  { alert('お名前を入力してください。'); return; }
+  if (!group) { alert('職種を選択してください。'); return; }
+  applyLogin(name, group);
+  setCookie('hub_name',  name,  180);
+  setCookie('hub_group', group, 180);
+}
+
+function applyLogin(name, group) {
+  state.user = { name: name, group: group };
+  state.progress = {};
+  document.getElementById('badge-name').textContent = name + '（' + group + '）';
+  document.getElementById('app-header').style.display = '';
+  document.getElementById('screen-login').style.display = 'none';
+  loadModules();
+  showScreen('screen-catalog');
+}
+
+function logout() {
+  if (!confirm('ログアウトしますか？\n別の方が使う場合はログアウトしてください。')) return;
+  setCookie('hub_name',  '', -1);
+  setCookie('hub_group', '', -1);
+  state.user = null;
+  document.getElementById('app-header').style.display = 'none';
+  document.getElementById('screen-login').style.display = '';
+  document.getElementById('input-name').value  = '';
+  document.getElementById('input-group').value = '';
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+}
+
+// ===================================================
+// 画面切替
+// ===================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showCatalog() {
+  state.currentModule = null;
+  renderCatalog();
+  showScreen('screen-catalog');
+}
+
+// ===================================================
+// 教材読み込み
+// ===================================================
+function loadModules() {
+  if (!APPS_SCRIPT_URL) {
+    state.modules = getSampleModules();
+    renderCatalog();
+    return;
+  }
+  fetch(APPS_SCRIPT_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      state.modules = (data.status === 'ok') ? data.modules : getSampleModules();
+      renderCatalog();
+    })
+    .catch(function() {
+      state.modules = getSampleModules();
+      renderCatalog();
+    });
+}
+
+function getSampleModules() {
+  return [
+    {
+      id: 'handwash',
+      title: '手洗いの基本',
+      category: '看護技術',
+      groups: ['新人看護師','既存看護師','看護助手','教育担当者'],
+      video: '',
+      standard: '手洗いは感染予防の最も基本的な手技です。\n\n【手順】\n1. 流水で手を濡らす\n2. 石けんを適量手に取る\n3. 手のひら・手の甲・指の間・爪・手首を15秒以上こすり洗い\n4. 流水で十分にすすぐ\n5. 清潔なペーパータオルで拭く\n\n疑問点は担当者に確認してください。',
+      questions: [
+        {q:'手洗いは最低何秒以上こすり洗いをするか', options:['10秒以上','15秒以上','30秒以上'], correct:1},
+        {q:'手洗い後の拭き取りに使用するのはどれか', options:['共用のタオル','ペーパータオル','エアドライヤーのみ'], correct:1}
+      ]
+    },
+    {
+      id: 'safety',
+      title: '医療安全の基本',
+      category: '医療知識',
+      groups: ['新人看護師','既存看護師','教育担当者'],
+      video: '',
+      standard: '医療安全上の疑問が生じた場合は、自己判断せず必ず担当者に確認してから行動してください。\n\n【基本姿勢】\n・「確認・報告・連絡・相談」を徹底する\n・インシデントは迷わず報告する\n・疑問はその場で解決する',
+      questions: [
+        {q:'安全上の疑問が残るときの正しい行動は？', options:['担当者に確認してから進める','自己判断で進める','次回の研修まで保留して進める'], correct:0}
+      ]
+    }
+  ];
+}
+
+// ===================================================
+// カタログ表示
+// ===================================================
+function renderCatalog() {
+  var q   = (document.getElementById('search-input')  || {}).value || '';
+  var cat = (document.getElementById('cat-filter')    || {}).value || '';
+
+  var cats = [...new Set(state.modules.map(function(m){return m.category;}).filter(Boolean))];
+  var cf = document.getElementById('cat-filter');
+  if (cf) {
+    var prev = cf.value;
+    cf.innerHTML = '<option value="">すべての分類</option>' +
+      cats.map(function(c){return '<option value="'+esc(c)+'"'+(c===prev?' selected':'')+'>'+esc(c)+'</option>';}).join('');
+  }
+
+  var filtered = state.modules.filter(function(m) {
+    if (cat && m.category !== cat) return false;
+    if (q) {
+      var hay = [m.title, m.category, (m.groups||[]).join(' ')].join(' ').toLowerCase();
+      if (hay.indexOf(q.toLowerCase()) < 0) return false;
+    }
+    return true;
+  });
+
+  var html = '';
+  if (!filtered.length) {
+    html = '<div class="empty-msg">条件に合う教材はありません。</div>';
+  } else {
+    filtered.forEach(function(m) {
+      var prog  = state.progress[m.id] || {};
+      var label = getStatusLabel(m, prog);
+      var groupTags = (m.groups||[]).map(function(g){return '<span class="tag group">'+esc(g)+'</span>';}).join('');
+      html += '<div class="card" onclick="openModule(\''+esc(m.id)+'\')">'+
+        '<div class="card-tags"><span class="tag">'+esc(m.category||'')+'</span>'+groupTags+'</div>'+
+        '<h3>'+esc(m.title)+'</h3>'+
+        '<div class="card-footer">'+
+          '<span class="status-pill pill-'+label+'">'+label+'</span>'+
+          '<button class="btn-open">開く →</button>'+
+        '</div>'+
+      '</div>';
+    });
+  }
+  document.getElementById('card-list').innerHTML = html;
+}
+
+function getStatusLabel(m, prog) {
+  if (!prog.watched) return '未視聴';
+  if (!m.questions || !m.questions.length) return '視聴済み';
+  if (!prog.quiz) return 'テスト未';
+  if (prog.quiz.missed && prog.quiz.missed.length) return '再確認';
+  return '完了';
+}
+
+// ===================================================
+// 教材詳細
+// ===================================================
+function openModule(id) {
+  var m = state.modules.find(function(x){return x.id===id;});
+  if (!m) return;
+  state.currentModule = m;
+  renderModule(m);
+  showScreen('screen-module');
+}
+
+function renderModule(m) {
+  var prog    = state.progress[m.id] || {};
+  var watched = prog.watched;
+
+  var videoHtml = m.video
+    ? '<video controls playsinline preload="metadata" src="'+esc(m.video)+'"></video>'
+    : '<div class="no-video">▶ 動画は準備中です</div>';
+
+  var watchBtn = watched
+    ? '<div class="watch-done">✅ 視聴済みとして記録されています</div>'
+    : '<button class="btn-watch" onclick="recordWatch()">視聴済みを記録する</button>';
+
+  var quizHtml = renderQuizSection(m, prog, watched);
+
+  document.getElementById('module-content').innerHTML =
+    '<div class="module-title">'+esc(m.title)+'</div>'+
+    '<div class="module-meta">'+esc(m.category||'')+(m.groups&&m.groups.length?' ・ '+esc(m.groups.join('・')):'')+'</div>'+
+    '<div class="section-card">'+
+      '<h4>📹 動画</h4>'+videoHtml+watchBtn+
+    '</div>'+
+    (m.standard
+      ? '<div class="section-card"><h4>📋 標準手順</h4><div class="standard-text">'+esc(m.standard)+'</div></div>'
+      : '')+
+    '<div class="section-card" id="quiz-section">'+
+      '<h4>✅ 確認テスト</h4>'+quizHtml+
+    '</div>';
+}
+
+function renderQuizSection(m, prog, watched) {
+  if (!m.questions || !m.questions.length) return '<p class="quiz-locked">この教材には確認テストがありません。</p>';
+  if (!watched) return '<p class="quiz-locked">動画を視聴後、確認テストが開放されます。</p>';
+  if (prog.quiz) {
+    var scoreColor = prog.quiz.score===100 ? '#059669' : '#d97706';
+    var html = '<div style="text-align:center;margin-bottom:12px;">'+
+      '<div style="font-size:32px;font-weight:700;color:'+scoreColor+';">'+prog.quiz.score+'%</div>'+
+      '<div style="font-size:13px;color:#94a3b8;">正答率（'+prog.quiz.correct+'/'+prog.quiz.total+'問）</div></div>';
+    if (prog.quiz.missed && prog.quiz.missed.length) {
+      html += '<div style="font-size:13px;color:#dc2626;margin-bottom:10px;">再確認の設問：<br>'+
+        prog.quiz.missed.map(function(q){return '・'+esc(q);}).join('<br>')+'</div>';
+    }
+    html += '<button class="btn-secondary" style="width:100%" onclick="startQuiz()">もう一度挑戦する</button>';
+    return '<div class="quiz-wrap">'+html+'</div>';
+  }
+  return '<div class="quiz-wrap"><p style="font-size:13px;color:#475569;margin-bottom:12px;">'+
+    m.questions.length+'問の確認テストがあります。</p>'+
+    '<button class="btn-submit" style="width:100%" onclick="startQuiz()">テストを開始する</button></div>';
+}
+
+// ===================================================
+// 視聴記録
+// ===================================================
+function recordWatch() {
+  var m = state.currentModule;
+  if (!m) return;
+  if (!state.progress[m.id]) state.progress[m.id] = {};
+  state.progress[m.id].watched = true;
+  postRecord(m, '視聴', '', '', '');
+  renderModule(m);
+}
+
+// ===================================================
+// クイズ
+// ===================================================
+function startQuiz() {
+  var m = state.currentModule;
+  if (!m || !m.questions) return;
+  state.quizAnswers = new Array(m.questions.length).fill(null);
+  state.quizIndex   = 0;
+  renderQuizActive();
+}
+
+function renderQuizActive() {
+  var m     = state.currentModule;
+  var i     = state.quizIndex;
+  var q     = m.questions[i];
+  var total = m.questions.length;
+  var sel   = state.quizAnswers[i];
+
+  var opts = q.options.map(function(opt, oi) {
+    return '<label class="quiz-opt'+(sel===oi?' selected':'')+'">'+
+      '<input type="radio" name="quiz-opt" value="'+oi+'" '+(sel===oi?'checked':'')+' onchange="selectOpt('+oi+')">'+
+      '<span>'+esc(opt)+'</span></label>';
+  }).join('');
+
+  var navHtml =
+    (i > 0 ? '<button class="btn-secondary" onclick="quizPrev()">← 前へ</button>' : '<span></span>')+
+    '<span class="quiz-progress">'+(i+1)+' / '+total+'</span>'+
+    (i < total-1
+      ? '<button class="btn-secondary" onclick="quizNext()">次へ →</button>'
+      : '<button class="btn-submit" onclick="submitQuiz()">回答を送信</button>');
+
+  document.getElementById('quiz-section').innerHTML =
+    '<h4>✅ 確認テスト</h4>'+
+    '<div class="quiz-wrap">'+
+      '<div class="quiz-q">Q'+(i+1)+'. '+esc(q.q)+'</div>'+
+      '<div class="quiz-options">'+opts+'</div>'+
+      '<div class="quiz-nav">'+navHtml+'</div>'+
+    '</div>';
+}
+
+function selectOpt(oi) {
+  state.quizAnswers[state.quizIndex] = oi;
+  renderQuizActive();
+}
+function quizNext() {
+  if (state.quizAnswers[state.quizIndex] === null) { alert('選択肢を選んでください。'); return; }
+  state.quizIndex++;
+  renderQuizActive();
+}
+function quizPrev() {
+  if (state.quizIndex > 0) { state.quizIndex--; renderQuizActive(); }
+}
+function submitQuiz() {
+  if (state.quizAnswers[state.quizIndex] === null) { alert('選択肢を選んでください。'); return; }
+  var m = state.currentModule;
+  var correct = 0, missed = [];
+  m.questions.forEach(function(q, i) {
+    if (state.quizAnswers[i] === q.correct) { correct++; }
+    else { missed.push(q.q); }
+  });
+  var total = m.questions.length;
+  var score = Math.round(correct / total * 100);
+  if (!state.progress[m.id]) state.progress[m.id] = {};
+  state.progress[m.id].quiz = {score:score, correct:correct, total:total, missed:missed};
+  postRecord(m, 'テスト', score, correct, total);
+  showResult(m, score, correct, total, missed);
+}
+function retryQuiz() {
+  startQuiz();
+  showScreen('screen-module');
+}
+
+// ===================================================
+// 結果表示
+// ===================================================
+function showResult(m, score, correct, total, missed) {
+  document.getElementById('result-icon').textContent  = score===100 ? '🎉' : score>=70 ? '👍' : '📚';
+  document.getElementById('result-score').textContent = score + '%';
+  document.getElementById('result-label').textContent = '正答数：'+correct+'/'+total+'問';
+  var items = m.questions.map(function(q, i) {
+    var ok = state.quizAnswers[i] === q.correct;
+    return '<div class="result-item '+(ok?'ok':'ng')+'">'+esc(q.q)+'</div>';
+  }).join('');
+  document.getElementById('result-detail').innerHTML = '<h4>設問の正誤</h4>' + items;
+  document.getElementById('btn-retry').style.display = missed.length ? '' : 'none';
+  showScreen('screen-result');
+  renderCatalog();
+}
+
+// ===================================================
+// 受講記録を送信
+// ===================================================
+function postRecord(m, type, score, correct, total) {
+  if (!APPS_SCRIPT_URL || !state.user) return;
+  var params = new URLSearchParams({
+    '氏名': state.user.name, '職種': state.user.group,
+    '教材ID': m.id, '教材タイトル': m.title, '種別': type,
+    '正答率': score, '正答数': correct, '問題数': total
+  });
+  fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', body:params});
+}
+
+// ===================================================
+// ユーティリティ
+// ===================================================
+function esc(x) {
+  return String(x||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// ===================================================
+// 起動 — クッキーがあれば自動ログイン
+// ===================================================
+(function init() {
+  var savedName  = getCookie('hub_name');
+  var savedGroup = getCookie('hub_group');
+  if (savedName && savedGroup) {
+    document.getElementById('input-name').value  = savedName;
+    document.getElementById('input-group').value = savedGroup;
+    applyLogin(savedName, savedGroup);
+  }
+})();
+</script>
+</body>
+</html>
