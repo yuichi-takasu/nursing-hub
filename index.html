@@ -133,11 +133,8 @@ video{width:100%;border-radius:8px;background:#000;}
       <label>職種</label>
       <select id="input-group">
         <option value="">選択してください</option>
-        <option>新人看護師</option>
-        <option>既存看護師</option>
+        <option>看護師</option>
         <option>看護助手</option>
-        <option>教育担当者</option>
-        <option>その他</option>
       </select>
     </div>
     <button class="btn-primary" onclick="doLogin()">ログイン</button>
@@ -281,7 +278,7 @@ function getSampleModules() {
       id: 'handwash',
       title: '手洗いの基本',
       category: '看護技術',
-      groups: ['新人看護師','既存看護師','看護助手','教育担当者'],
+      group: '全員',
       video: '',
       standard: '手洗いは感染予防の最も基本的な手技です。\n\n【手順】\n1. 流水で手を濡らす\n2. 石けんを適量手に取る\n3. 手のひら・手の甲・指の間・爪・手首を15秒以上こすり洗い\n4. 流水で十分にすすぐ\n5. 清潔なペーパータオルで拭く\n\n疑問点は担当者に確認してください。',
       questions: [
@@ -293,7 +290,7 @@ function getSampleModules() {
       id: 'safety',
       title: '医療安全の基本',
       category: '医療知識',
-      groups: ['新人看護師','既存看護師','教育担当者'],
+      group: '看護師',
       video: '',
       standard: '医療安全上の疑問が生じた場合は、自己判断せず必ず担当者に確認してから行動してください。\n\n【基本姿勢】\n・「確認・報告・連絡・相談」を徹底する\n・インシデントは迷わず報告する\n・疑問はその場で解決する',
       questions: [
@@ -321,7 +318,7 @@ function renderCatalog() {
   var filtered = state.modules.filter(function(m) {
     if (cat && m.category !== cat) return false;
     if (q) {
-      var hay = [m.title, m.category, (m.groups||[]).join(' ')].join(' ').toLowerCase();
+      var hay = [m.title, m.category, m.group||''].join(' ').toLowerCase();
       if (hay.indexOf(q.toLowerCase()) < 0) return false;
     }
     return true;
@@ -334,7 +331,7 @@ function renderCatalog() {
     filtered.forEach(function(m) {
       var prog  = state.progress[m.id] || {};
       var label = getStatusLabel(m, prog);
-      var groupTags = (m.groups||[]).map(function(g){return '<span class="tag group">'+esc(g)+'</span>';}).join('');
+      var groupTags = m.group ? '<span class="tag group">'+esc(m.group)+'</span>' : '';
       html += '<div class="card" onclick="openModule(\''+esc(m.id)+'\')">'+
         '<div class="card-tags"><span class="tag">'+esc(m.category||'')+'</span>'+groupTags+'</div>'+
         '<h3>'+esc(m.title)+'</h3>'+
@@ -371,9 +368,11 @@ function renderModule(m) {
   var prog    = state.progress[m.id] || {};
   var watched = prog.watched;
 
-  var videoHtml = m.video
-    ? '<video controls playsinline preload="metadata" src="'+esc(m.video)+'"></video>'
-    : '<div class="no-video">▶ 動画は準備中です</div>';
+  var videoHtml = !m.video
+    ? '<div class="no-video">▶ 動画は準備中です</div>'
+    : m.video.indexOf('youtube.com/embed') >= 0 || m.video.indexOf('youtu.be') >= 0
+      ? '<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;"><iframe src="'+(m.video.indexOf('youtu.be')>=0?m.video.replace('youtu.be/','www.youtube.com/embed/'):m.video)+'" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>'
+      : '<video controls playsinline preload="metadata" src="'+esc(m.video)+'" style="width:100%;border-radius:8px;"></video>';
 
   var watchBtn = watched
     ? '<div class="watch-done">✅ 視聴済みとして記録されています</div>'
@@ -383,7 +382,7 @@ function renderModule(m) {
 
   document.getElementById('module-content').innerHTML =
     '<div class="module-title">'+esc(m.title)+'</div>'+
-    '<div class="module-meta">'+esc(m.category||'')+(m.groups&&m.groups.length?' ・ '+esc(m.groups.join('・')):'')+'</div>'+
+    '<div class="module-meta">'+esc(m.category||'')+(m.group?' ・ '+esc(m.group):'')+'</div>'+
     '<div class="section-card">'+
       '<h4>📹 動画</h4>'+videoHtml+watchBtn+
     '</div>'+
